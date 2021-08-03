@@ -1,0 +1,135 @@
+<html lang="en"><head>
+    <title>[Your Lego Model] - Yun'Harla's LDraw Model Viewer mod</title>
+    <!-- HeaderInclude -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <style>@font-face { font-family: 'Icons'; font-display: swap; }</style>
+    <link rel="preload" href="res/icons.woff2" as="font" type="font/woff2" crossorigin="">
+    <link rel="stylesheet" type="text/css" href="res/semantic.min.css">
+<!--<base href="https://www.ldraw.org/">-->
+    <!-- End HeaderInclude -->
+  </head>
+  <body class="pushable">
+    <div class="">
+      <div class="ui master-grid one column grid container basic segment">
+        <div class="column">
+  <h2 class="ui block header document">
+    <div class="content">[Your Lego Model] - Yun'Harla's LDraw Model Viewer mod</div>
+  </h2>
+<div class="ui segment">
+	<input id="model-bg-color" type="color" value="#FFFFFF" hidden="">
+<div>
+  <div id="buttonBar" class="ui icon buttons transition hidden">
+    <button id="physicalBtn" class="ui button" title="Toggle Cell Shading/Phyical Render Mode"><i class="eye icon"></i></button>
+    <button id="bkgColorBtn" class="ui button" title="Change Background Color"><i class="fill drip icon"></i></button>
+  </div>
+  <div id="buttonBar" class="transition hidden">
+  </div>
+  <div id="progress"></div>
+  <div id="webgl" class="ui segment" style="min-height: 600px;">
+   <canvas id="canvas" class="transition hidden"></canvas>
+  </div>
+</div>
+<div class="ui info message">
+  <div class="header">Notes: Enjoy =) This is [Your Lego Model]</div>
+</div></div>
+
+        </div>
+      </div>
+    </div>
+    <!-- SiteScripts -->
+<script src='res/ldr-aio.min.js'></script>
+
+<script type="text/javascript">
+$('.ui.menu > .ui.dropdown').dropdown({on:'hover',});$('.ui.sidebar').sidebar('attach events','#menubutton','show');$('.ui.checkbox').checkbox();$('.ui.sticky').sticky({context:'#main_content'});$('table.sortable').tablesort();$('.feed.image').visibility({type:'image',transition:'fade in',duration:1000});$('.ui.sitesearch').each(function(){$(this).search({apiSettings:{url:'/common/php/unified_search.php?q={query}&sites=main,pt'},minCharacters:3,type:'category'})});$('.ui.ptsearch').each(function(){$(this).search({apiSettings:{url:'/common/php/unified_search.php?q={query}&sites=pt'},minCharacters:3,type:'category'})});
+</script>
+
+<script type='text/javascript'>
+const model = 'data:text/plain;base64,'
+	+ `[.model.txt]`,
+	part_paths = [.resp.txt];
+
+LDR.Options.bgColor = 0x0000aa; //0xFFFFFF;
+LDR.Options.studLogo = 2;
+
+LDR.Colors.envMapPrefix = '/common/ldbi/textures/cube/';
+LDR.Colors.textureMaterialPrefix = '/common/ldbi/textures/materials/';
+
+let scene;
+const canvas = document.getElementById('canvas');
+
+var onProgress = function(id) {
+  if ((typeof id === 'string' || id instanceof String) && !id.startsWith('data:')) {
+    document.getElementById("progress").textContent = "Loading: " + id;
+  }
+};
+
+var onLoaded = function() {
+    $("#webgl").api("remove loading")
+    $("#buttonBar").transition('show');
+    $('#progress').text('');
+    $("#progress").transition('hide');
+    $("#canvas").transition('show');
+}
+
+
+var idToUrl = function(id) {
+  if (part_paths[id]) {
+    return [part_paths[id]];
+  }
+  else {
+    return [id];
+  }
+};
+
+var idToTextureUrl = function(id) {
+  if (part_paths[id]) {
+    return part_paths[id];
+  }
+  else {
+    return id;
+  }
+};
+
+function changeBgColor(color)
+{
+  LDR.Options.bgColor = parseInt(color.replace(/^#/, ''), 16);
+  $("#bkgColorBtn").css('background-color', color);
+  $("#canvas").css('background', color);
+  scene.scene.background = new THREE.Color(LDR.Options.bgColor);
+  scene.render();
+}
+
+function loadLdr() {
+  if (scene) {
+	scene = null;
+  }
+  scene = new LDrawOrg.Model(canvas, model, {idToUrl: idToUrl, idToTextureUrl: idToTextureUrl, onProgress: onProgress, onLoaded: onLoaded});
+  //changeBgColor('#000088');
+}
+
+$(document).ready( function() {
+  $("#bkgColorBtn").click(function(){
+    $('#model-bg-color').click();
+  });
+
+  $("#physicalBtn").click(function(){
+    $("#webgl").api("set loading");
+    if (scene.loader.physicalRenderingAge > 0) {
+      scene.setPhysicalRenderingAge(0);
+    }
+    else {
+      scene.setPhysicalRenderingAge(20);
+    }
+  });
+
+  $('#model-bg-color').on('change', function (e) {
+      changeBgColor(e.target.value);
+  });
+
+  loadLdr();
+});
+</script>
+    <!-- End SiteScripts -->
+</body></html>

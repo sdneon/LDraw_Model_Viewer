@@ -1,0 +1,207 @@
+<html lang="en"><head>
+    <title>LDraw.org - LDraw Model Viewer</title>
+    <!-- HeaderInclude -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <style>@font-face { font-family: 'Icons'; font-display: swap; }</style>
+    <link rel="preload" href="res/icons.woff2" as="font" type="font/woff2" crossorigin="">
+    <link rel="stylesheet" type="text/css" href="res/semantic.min.css">
+<!--<base href="https://www.ldraw.org/">-->
+    <!-- End HeaderInclude -->
+  </head>
+  <body class="pushable">
+    <div class="">
+      <div class="ui master-grid one column grid container basic segment">
+        <div class="column">
+  <h2 class="ui block header document">
+          <div class="content">Parts &amp; Tools: LDraw Model Viewer</div>
+  </h2>
+      <div class="ui segment"><form class="ui form" method="POST" enctype="multipart/form-data" action="/" name="submitform" id="fileform">
+  <div class="inline field">
+    <label>File(s)</label>
+    <div class="ui action input file-upload">
+      <input id="file-upload-text" type="text" readonly="">
+      <input id="file-upload-input" type="file" name="datfile" accept=".dat,.ldr,.mpd" style="display: none!important;">
+      <div id="file-upload-button" class="ui icon button file-upload">
+        <i class="upload icon"></i>
+      </div>
+    </div>
+  </div>
+  <button id="submitBtn" class="ui button" type="submit">Submit</button>
+</form>
+
+<input id="model-bg-color" type="color" value="#FFFFFF" hidden="">
+
+<div>
+  <div id="buttonBar" class="ui icon buttons transition hidden">
+    <button id="resetBtn" class="ui button" title="Reset Model"><i class="undo icon"></i></button>
+    <button id="physicalBtn" class="ui button" title="Toggle Cell Shading/Phyical Render Mode"><i class="eye icon"></i></button>
+    <button id="bkgColorBtn" class="ui button" title="Change Background Color"><i class="fill drip icon"></i></button>
+  </div>
+  <div id="buttonBar" class="transition hidden">
+  </div>
+  <div id="progress"></div>
+  <div id="webgl" class="ui segment" style="min-height: 600px;">
+   <canvas id="canvas" class="transition hidden"></canvas>
+  </div>
+</div>
+<div class="ui info message">
+  <div class="header">Notes: Enjoy =)</div>
+</div></div>
+
+        </div>
+      </div>
+    </div>
+    <!-- SiteScripts -->
+<script src='res/ldr-aio.min.js'></script>
+
+<script type="text/javascript">
+$('.ui.menu > .ui.dropdown').dropdown({on:'hover',});$('.ui.sidebar').sidebar('attach events','#menubutton','show');$('.ui.checkbox').checkbox();$('.ui.sticky').sticky({context:'#main_content'});$('table.sortable').tablesort();$('.feed.image').visibility({type:'image',transition:'fade in',duration:1000});$('.ui.sitesearch').each(function(){$(this).search({apiSettings:{url:'/common/php/unified_search.php?q={query}&sites=main,pt'},minCharacters:3,type:'category'})});$('.ui.ptsearch').each(function(){$(this).search({apiSettings:{url:'/common/php/unified_search.php?q={query}&sites=pt'},minCharacters:3,type:'category'})});
+</script>
+
+<script type='text/javascript'>
+
+
+var model = '';
+var part_paths;
+let reader = new FileReader();
+var scene;
+
+let canvas = document.getElementById('canvas');
+
+LDR.Options.bgColor = 0xFFFFFF;
+LDR.Options.studLogo = 2;
+
+LDR.Colors.envMapPrefix = '/common/ldbi/textures/cube/';
+LDR.Colors.textureMaterialPrefix = '/common/ldbi/textures/materials/';
+
+var onProgress = function(id) {
+  if ((typeof id === 'string' || id instanceof String) && !id.startsWith('data:')) {
+    document.getElementById("progress").textContent = "Loading: " + id;
+  }
+};
+
+var onLoaded = function() {
+    $("#webgl").api("remove loading")
+    $("#buttonBar").transition('show');
+    $('#progress').text('');
+    $("#progress").transition('hide');
+    $("#canvas").transition('show');
+}
+
+
+var idToUrl = function(id) {
+  if (part_paths[id]) {
+    return [part_paths[id]];
+  }
+  else {
+    return [id];
+  }
+};
+
+var idToTextureUrl = function(id) {
+  if (part_paths[id]) {
+    return part_paths[id];
+  }
+  else {
+    return id;
+  }
+};
+
+var onFileLoad = function (evt) {
+  model = evt.target.result;
+  modeltext = model.split(/\r\n|\r|\n/);
+  var mpdfiles = [];
+  // get list of embedded files in the mpd
+  modeltext.forEach(function(line) {
+    if (line.trim().startsWith('0 FILE')) {
+      filename = line.split('0 FILE')[1].toLowerCase().trim();
+      mpdfiles.push(filename);
+    }
+  });
+  // generate list of file to pass to the path prefetcher
+  var modelfiles = [];
+  modeltext.forEach(function(line) {
+    if (line.trim().startsWith('1')) {
+      filename = line.split(/\s+/).slice(14).join(' ').toLowerCase();
+      if (!mpdfiles.includes(filename) && !modelfiles.includes(filename)) {
+        modelfiles.push(filename);
+      }
+    }
+  });
+  console.log("Data sent to LDraw.org: ", modelfiles);
+
+  var posting = $.post('/ldr_query', {parts: JSON.stringify([modelfiles]), dataurl: 1, unoff: 0})
+    .done(function( response ) {
+      part_paths = JSON.parse(response);
+      //console.log(part_paths);
+      model = 'data:text/plain;base64,' + btoa(model);
+      if (scene) {
+        scene = null;
+      }
+      scene = new LDrawOrg.Model(canvas, model, {idToUrl: idToUrl, idToTextureUrl: idToTextureUrl, onProgress: onProgress, onLoaded: onLoaded});
+    });
+}
+reader.onloadend = onFileLoad;
+
+$(document).ready( function() {
+  $("#submitBtn").click(function(){
+    if (document.getElementById('file-upload-input').files[0]) {
+      $("#fileform").transition('hide');
+      $("#buttonBar").transition('show');
+      $("#webgl").api("set loading")
+      reader.readAsText(document.getElementById('file-upload-input').files[0]);
+    }
+    return false;
+  });
+
+  $("#resetBtn").click(function(){
+    $("#fileform").transition('show');
+    $("#progress").transition('show');
+    $('#buttonBar').transition('hide');
+    $("#canvas").transition('hide');
+    $("#webgl").api("remove loading");
+    return false;
+  });
+
+  $("#bkgColorBtn").click(function(){
+    $('#model-bg-color').click();
+  });
+
+  $("#physicalBtn").click(function(){
+    $("#webgl").api("set loading");
+    if (scene.loader.physicalRenderingAge > 0) {
+      scene.setPhysicalRenderingAge(0);
+    }
+    else {
+      scene.setPhysicalRenderingAge(20);
+    }
+  });
+
+  $('#file-upload-text').add('#file-upload-button').on('click', function (e) {
+      $('#file-upload-input', $(e.target).parents()).click();
+      e.stopPropagation();
+  });
+
+  $('#file-upload-input').on('change', function (e) {
+      if (e.target.files.length > 1) {
+        var fileText = e.target.files.length + " files selected";
+      }
+      else {
+        var fileText = e.target.files[0].name;
+      }
+      $('#file-upload-text', $(e.target).parent()).val(fileText);
+  });
+
+  $('#model-bg-color').on('change', function (e) {
+      LDR.Options.bgColor = parseInt(e.target.value.replace(/^#/, ''), 16);
+      $("#bkgColorBtn").css('background-color', e.target.value);
+      $("#canvas").css('background', e.target.value);
+      scene.scene.background = new THREE.Color(LDR.Options.bgColor);
+      scene.render();
+  });
+});
+</script>
+    <!-- End SiteScripts -->
+</body></html>
