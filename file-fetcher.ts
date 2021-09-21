@@ -143,6 +143,7 @@ var getSubfiles = (filenames: string[] | string, completedCallback: (allFiles: {
                                             // we didn't find the part, let's ignore it,
                                             // it might be part of a .mpd
                                             files[filename] = '';
+                                            console.log('Failed to find:'.bold.error, filename);
 
                                             completedCount++;
                                             if (completedCount === arr.length) {
