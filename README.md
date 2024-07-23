@@ -46,7 +46,7 @@ Usages of Server mod:
 
 ### Run Server for Online Viewer
 1. Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run: `node parts-server.ts`.
-2. In browser, navigate to `https://localhost:80/viewer.html`. Have fun loading your Lego models.
+2. In browser, navigate to [http://localhost:80/viewer.html](http://localhost:80/viewer.html). Have fun loading your Lego models.
 
 ### Run Server to Generate Data for Portable Viewer
 1. Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run: `node parts-server.ts file_path_to_LDR_file`.
