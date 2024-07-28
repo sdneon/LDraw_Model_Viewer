@@ -52414,11 +52414,12 @@ LDR.LDRGeometry.prototype.fromPartDescription = function (t, e) {
   //if (!i) throw 'Part not loaded: ' + e.ID;
   if (!i)
   {
-      //fallback on stud
+      //SD: fallback on stud
       i = t.getPartType('6141.dat');
       window.missing_parts ??= {};
       window.missing_parts[e.ID] = true;
-      //throw 'Part not loaded: ' + e.ID;
+      if (!i) //shouldn't be possible!
+        throw 'Part not loaded: ' + e.ID;
   }
   i.ensureGeometry(t),
   this.replaceWithDeep(i.geometry);
@@ -53710,6 +53711,11 @@ THREE.LDRLoader = function (t, e, s) {
 },
 THREE.LDRLoader.prototype.load = function (t) {
   let e = this.idToUrl(t);
+  const c = '6141.dat';
+  if (!e && (t === c)) //SD: provide fallback 1x1 stud in this lib!
+  {
+      e = 'data:text/plain;base64,MCBQbGF0ZSAgMSB4ICAxIFJvdW5kDQowIE5hbWU6IDYxNDEuZGF0DQowIEF1dGhvcjogSmFtZXMgSmVzc2ltYW4NCjAgIUxEUkFXX09SRyBQYXJ0IFVQREFURSAyMDE1LTAxDQowICFMSUNFTlNFIFJlZGlzdHJpYnV0YWJsZSB1bmRlciBDQ0FMIHZlcnNpb24gMi4wIDogc2VlIENBcmVhZG1lLnR4dA0KDQowIEJGQyBDRVJUSUZZIENDVw0KDQowICFISVNUT1JZIDE5OTgtMDYtMjAgW1BUYWRtaW5dIE9mZmljaWFsIFVwZGF0ZSAxOTk4LTA2DQowICFISVNUT1JZIDIwMDMtMDEtMjkgW3NibGlzc10gIENvbXBsZXRlZCBoZWFkZXI7IEJGQydlZDsgbWlzYyBjbGVhbnVwDQowICFISVNUT1JZIDIwMDMtMDgtMDEgW1BUYWRtaW5dIE9mZmljaWFsIFVwZGF0ZSAyMDAzLTAyDQowICFISVNUT1JZIDIwMDctMTAtMjYgW1BUYWRtaW5dIEhlYWRlciBmb3JtYXR0ZWQgZm9yIENvbnRyaWJ1dG9yIEFncmVlbWVudA0KMCAhSElTVE9SWSAyMDA4LTA3LTAxIFtQVGFkbWluXSBPZmZpY2lhbCBVcGRhdGUgMjAwOC0wMQ0KMCAhSElTVE9SWSAyMDE0LTExLTI5IFtTdGVmZmVuXSBSZW5hbWVkIGZyb20gNDA3Mw0KMCAhSElTVE9SWSAyMDE0LTEyLTI4IFtNYWdGb3JzXSBQcmltaXRpdmUgc3Vic3RpdHV0aW9uDQowICFISVNUT1JZIDIwMTUtMTAtMTEgW1BUYWRtaW5dIE9mZmljaWFsIFVwZGF0ZSAyMDE1LTAxDQoNCjEgMTYgMCAzIDAgLTEgMCAwIDAgLTEuMjUgMCAwIDAgMSBzdHVkNC5kYXQNCjEgMTYgMCAzIDAgLTYgMCAwIDAgLTEgMCAwIDAgNiA0LTRkaXNjLmRhdA0KMSAxNiAwIDMgMCAtMiAwIDAgMCAtMSAwIDAgMCAyIDQtNHJpbmc0LmRhdA0KMSAxNiAwIDAgMCAxMCAwIDAgMCAzIDAgMCAwIDEwIDQtNGN5bG8uZGF0DQoxIDE2IDAgMCAwIDIgMCAwIDAgMSAwIDAgMCAyIDQtNHJpbmc0LmRhdA0KMSAxNiAwIDAgMCAyIDAgMCAwIDEgMCAwIDAgMiA0LTRyaW5nMy5kYXQNCjEgMTYgMCAwIDAgMSAwIDAgMCAxIDAgMCAwIDEgc3R1ZC5kYXQNCg==';
+  }
   if (t = t.toLowerCase().replace('\\', '/'), this.partTypes[t]) return void (!0 !== this.partTypes[t] && this.reportProgress(t));
   this.partTypes[t] = !0;
   let s = this,
@@ -54161,6 +54167,7 @@ THREE.LDRLoader.prototype.onPartsLoaded = function (t) {
   LDR.LDCAD &&
   t.forEach(t => LDR.LDCAD.handlePart(e, t)),
   i.length > 0 &&
+  e.load('6141.dat'); //SD: force load fallback part 1st!
   e.loadMultiple(i)
 },
 THREE.LDRLoader.prototype.getPartType = function (t) {

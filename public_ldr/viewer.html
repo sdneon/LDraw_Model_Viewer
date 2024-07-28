@@ -191,6 +191,7 @@ $(document).ready( function() {
   $("#submitBtn").click(handleSubmit);
 
   $("#resetBtn").click(function(){
+    retryCnt = 0;
     clearWarning();
     $("#fileform").transition('show');
     $("#progress").transition('show');
