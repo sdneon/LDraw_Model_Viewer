@@ -48,7 +48,9 @@
 </div>
 <div class="ui info message">
   <div class="header">Notes: Enjoy =)</div>
-</div></div>
+</div>
+<div id='warning' class='ui info message' style='display:none; background:orange; color:black'></div>
+</div>
 
         </div>
       </div>
@@ -67,6 +69,7 @@ var model = '';
 var part_paths;
 let reader = new FileReader();
 var scene;
+let retryCnt = 0;
 
 let canvas = document.getElementById('canvas');
 
@@ -82,12 +85,39 @@ var onProgress = function(id) {
   }
 };
 
+function clearWarning()
+{
+	const e = $('#warning');
+	e[0].innerHTML = '';
+	e.css('display', 'none');
+	model = ''; //reset as well
+	part_paths = undefined;
+	scene = undefined;
+	window.missing_parts = undefined;
+}
+
 var onLoaded = function() {
     $("#webgl").api("remove loading")
     $("#buttonBar").transition('show');
     $('#progress').text('');
     $("#progress").transition('hide');
     $("#canvas").transition('show');
+	let mp = window.missing_parts;
+	if (mp)
+	{
+		const e = $('#warning');
+		mp = Object.keys(mp);
+		if (mp.length > 0)
+		{
+			e[0].innerHTML = '<b>Missing parts</b>:<br>' + mp.join(',');
+			e.css('display', '');
+			if (retryCnt <= 0)
+			{
+				++retryCnt;
+				setTimeout(handleSubmit, 0);
+			}
+		}
+	}
 }
 
 
@@ -145,18 +175,23 @@ var onFileLoad = function (evt) {
 }
 reader.onloadend = onFileLoad;
 
-$(document).ready( function() {
-  $("#submitBtn").click(function(){
+function handleSubmit()
+{
     if (document.getElementById('file-upload-input').files[0]) {
+  	  clearWarning();
       $("#fileform").transition('hide');
       $("#buttonBar").transition('show');
       $("#webgl").api("set loading")
       reader.readAsText(document.getElementById('file-upload-input').files[0]);
     }
     return false;
-  });
+}
+
+$(document).ready( function() {
+  $("#submitBtn").click(handleSubmit);
 
   $("#resetBtn").click(function(){
+    clearWarning();
     $("#fileform").transition('show');
     $("#progress").transition('show');
     $('#buttonBar').transition('hide');
@@ -185,6 +220,7 @@ $(document).ready( function() {
   });
 
   $('#file-upload-input').on('change', function (e) {
+      retryCnt = 0;
       if (e.target.files.length > 1) {
         var fileText = e.target.files.length + " files selected";
       }

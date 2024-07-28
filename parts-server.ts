@@ -2,6 +2,9 @@
 /// <reference path="./file-fetcher.ts" />
 
 const PORT = 80;
+const FALLBACK_PART = '6141.dat';
+
+require('./ldr-deps.min.js');
 
 // to set up node and apache to run on the same server: http://stackoverflow.com/a/18604082/1063392
 
@@ -26,8 +29,12 @@ function spawnServer()
     app.use(bodyParser.urlencoded({ extended: false, limit: 1048576 }));
     app.use(express.static('public_ldr'));
 
-    app.post('/ldr_query', (req, res) => {
-    console.log('/ldr_query'.bold.debug);
+    app.get('/', (req, res) => {
+        res.redirect('/viewer.html');
+    });
+
+    function queryParts(res, parts)
+    {
         var d = domain.create();
         var responseHasBeenSent = false;
         d.on('error', function(er) {
@@ -39,7 +46,9 @@ function spawnServer()
         });
         d.run(function() {
             const start = Date.now();
-            fileFetcher.fetchFiles(JSON.parse(req.body.parts)[0], (allFiles: string[]) => {
+            if (parts.indexOf(FALLBACK_PART) < 0)
+                parts.push(FALLBACK_PART);
+            fileFetcher.fetchFiles(parts, (allFiles: string[]) => {
                 console.log('request took ' + (Date.now() - start) + ' ms to complete');
                 const data = {};
                 Object.keys(allFiles).forEach((key) => {
@@ -48,6 +57,16 @@ function spawnServer()
                 res.status(200).send(JSON.stringify(data));
             });
         });
+    }
+
+    app.get('/*.dat', (req, res) => {
+        console.log('Get part:'.bold.debug, req.url);
+        queryParts(res, [req.url.substring(1)]);
+    });
+
+    app.post('/ldr_query', (req, res) => {
+        console.log('/ldr_query'.bold.debug);
+        queryParts(res, JSON.parse(req.body.parts)[0]);
     });
 
     const server = app.listen(PORT);

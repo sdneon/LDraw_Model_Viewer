@@ -9,6 +9,15 @@ The source doesn't have a guide on how to use it (both viewer and server) in you
   * Basically figure out how to setup and run one for yourself.
   * Allow it to generate data for embed into prior portable viewer.
 
+**2024 Update**
+Am trying to pack it into a single Executable less data files for easier usage.
+* Phase 1 (done): include the node module dependencies, so user won't have to find (old, compatible versions) & download them on their own.
+* Phase 2 (mostly done): Use my Node.JS 22.x+ to run all dependencies bundled within, so no longer need the messy node_modules folder (with countless little files).
+  * Also patched server and viewer to fix edge cases of missing parts. Viewer somehow needs to internally retry after requesting and receiving missing parts from server.
+* Phase 3 (work in progress): Pack into a Node.JS SEA Single Executable Application, less data files and config.
+  * Will need to add a config file or commandline option overrides to access PORT and data library path settings. Since server scripts will now be embedded and untouchble with the SEA.
+  * SEA means no scripts files including node_modules needed. All are embedded within the .EXE for easy use.
+
 # How ldraw-visualizer works
 First, a primer on how ldraw-visualizer works on [LDraw.org](https://www.ldraw.org/parts/tools/ldraw-model-viewer.html)].
 `Server <-> Viewer in browser <- your disk`
@@ -45,20 +54,26 @@ Usages of Server mod:
     * Look for `const PORT = 80;` near the top of the file, and change the number.
 
 ### Run Server for Online Viewer
-1. Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run: `node parts-server.ts`.
+1. Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run:
+   ```
+   node parts-server.ts
+   ```
 2. In browser, navigate to [http://localhost:80/viewer.html](http://localhost:80/viewer.html). Have fun loading your Lego models.
 
 ### Run Server to Generate Data for Portable Viewer
-1. Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run: `node parts-server.ts file_path_to_LDR_file`.
+1. Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run:
+   ```
+   node parts-server.ts file_path_to_LDR_file
+   ```
     * This generates 2 files for embedding into a portable Viewer template .html file.
 2. Make a copy of portable Viewer template (viewer_template.html), say naming it view_model_1.html. Make these changes:
-    * ESSENTIAL: copy line from file_path_to_LDR_file.*model*.txt and paste it into the template, replacing the `[.model.txt]`. 
+    * ESSENTIAL: copy line from **file_path_to_LDR_file.*model*.txt** and paste it into the template, replacing the `[.model.txt]`. 
     ```
     const model = 'data:text/plain;base64,'
 	    + `[.model.txt]`,
 	part_paths = [.resp.txt];
 	```
-    * ESSENTIAL: copy line from file_path_to_LDR_file.*resp*.txt and paste it into the template, replacing the `[.resp.txt]`. The outcome is something like:
+    * ESSENTIAL: copy line from **file_path_to_LDR_file.*resp*.txt** and paste it into the template, replacing the `[.resp.txt]`. The outcome is something like:
     ```
     const model = 'data:text/plain;base64,'
 	    + `MCB......`, //very long base64 string
@@ -86,8 +101,10 @@ if (scene) { //<-- breakpoint here
 * Switch to debugger's Console tab to print `part_paths` and `model` and use 'Copy Object' (or equivalent) to copy each piece of data out.
     *  These 2 pieces of course then go right into the embed.
 
+PS: Unfortunately, the LDraw page is down as of Jul 2024, as it appears to be missing ldraw scripts.
+
 # Known Issues
-There are some Lego models which fail to load, even in original viewer. Haven't figured out why.
+There are some Lego models which fail to load, even in original viewer. Haven't figured out why. (This may be partly fixed in my 2024 update).
 
 # Thanks
 Thanks to everyone who made virtual Lego builds possible!
