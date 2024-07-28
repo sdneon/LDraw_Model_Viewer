@@ -14,8 +14,9 @@ Am trying to pack it into a single Executable less data files for easier usage.
 * Phase 1 (done): include the node module dependencies, so user won't have to find (old, compatible versions) & download them on their own.
 * Phase 2 (mostly done): Use my Node.JS 22.x+ to run all dependencies bundled within, so no longer need the messy node_modules folder (with countless little files).
   * Also patched server and viewer to fix edge cases of missing parts. Viewer somehow needs to internally retry after requesting and receiving missing parts from server.
-* Phase 3 (work in progress): Pack into a Node.JS SEA Single Executable Application, less data files and config.
-  * Will need to add a config file or commandline option overrides to access PORT and data library path settings. Since server scripts will now be embedded and untouchble with the SEA.
+* Phase 3 (work in progress; alpha version): Pack into a Node.JS SEA Single Executable Application, less data files, viewer(?) and config.
+  * Will need to add a config file or commandline option overrides to access PORT and data library path settings. Since server scripts will now be embedded and untouchable with the SEA.
+  * Possibly bundle web folder content (i.e. viewer) as well - will be tedious as Node.JS doesn't have a convenient virtual file system. Will have to explore zipping it or something.
   * SEA means no scripts files including node_modules needed. All are embedded within the .EXE for easy use.
 
 # How ldraw-visualizer works
@@ -86,6 +87,19 @@ Usages of Server mod:
 	    * Embed: replace above with `<script>`*everything from ldr-aio.min.js*`</script>`
     * Actually, there are a few other files not embedded, like .woff2 and .css. You can try embedding them yourselves or leave them separate and make sure they can be found.
 3. Save file, and open the HTML file  in browser to view your Lego models.
+
+### (Alpha!) Run Server SEApp
+1. Simply run web server mode:
+   ```
+   ldr.exe
+   ```
+   or commandline output mode:
+   ```
+   ldr.exe file_path_to_LDR_file
+   ```
+
+Dev Notes:
+* `ldr.ds` is all-in-one script embedded into ldr.exe the SEApp.
 
 ## Portable Viewer Mod
 Just follow the steps in `Run Server to Generate Data for Portable Viewer`.
