@@ -37,12 +37,12 @@ Usages of Server mod:
         * Installer can be rather pesky, asking for separate paths for parts library (that MUST end in 'LDraw' sub-folder) and apps.
         * E.g. Choose `c:\LDraw_Data\LDraw\` for parts library. This is ESSENTIAL for Server use. And choose `c:\LDraw\apps\` for apps.
 2. Download my AIO-Server and my [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases).
-    * PS: Modded Server codes are in 2 TypeScript files (`parts-server.ts` and `file-fetcher.ts`). Am not a TS fan, so have Not retained nfriend's original entire/TS folder structure, so I don't know is you can run my mod correctly the usual TS way. Hence, for simplicity, (Windows users) just use my [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases). E.g.: [node.exe for 16.6.0.1](https://github.com/sdneon/node/releases/download/16.6.0.1%2B/node.exe).
+    * PS: Modded Server codes are in 2 TypeScript files (`parts-server.ts` and `file-fetcher.ts`). Am not a TS fan, so have Not retained nfriend's original entire/TS folder structure, so I don't know if you can run my mod correctly the usual TS way. Hence, for simplicity, (Windows users) just use my [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases). E.g.: [node.exe for 16.6.0.1](https://github.com/sdneon/node/releases/download/16.6.0.1%2B/node.exe).
     * Install Server's dependencies: body-parser, domain, express.
 3. Configure **parts library path** in `file-fetcher.ts`.
     * Near top of file, set `rootDirectory` to your **parts library path**. E.g.: `rootDirectory = 'c:/LDraw_Data/LDraw/',`
-4. If desired, configure your web server port number in `parts-server.ts`.
-    * Look for `app.listen(80);` and change the number.
+4. If desired, configure your web server port number in `parts-server.ts`. Look for .
+    * Look for `const PORT = 80;` near the top of the file, and change the number.
 
 ### Run Server for Online Viewer
 1. Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run: `node parts-server.ts`.

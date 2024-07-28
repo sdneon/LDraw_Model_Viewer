@@ -1,6 +1,8 @@
 /// <reference path="../typings/references.ts" />
 /// <reference path="./file-fetcher.ts" />
 
+const PORT = 80;
+
 // to set up node and apache to run on the same server: http://stackoverflow.com/a/18604082/1063392
 
 //load colors module
@@ -13,7 +15,7 @@ function btoa_utf8(input)
     return Buffer.from(input, 'utf8').toString('base64');
 }
 
-const fileFetcher = require('./file-fetcher');
+const fileFetcher = require('./file-fetcher.ts');
 
 function spawnServer()
 {
@@ -26,29 +28,30 @@ function spawnServer()
 
     app.post('/ldr_query', (req, res) => {
     console.log('/ldr_query'.bold.debug);
-    var d = domain.create();
-    var responseHasBeenSent = false;
-    d.on('error', function(er) {
-        if (!responseHasBeenSent) {
-            responseHasBeenSent = true;
-            console.log(er);
-            res.status(500).send(er);
-        }
-    });
-    d.run(function() {
-        const start = Date.now();
-        fileFetcher.fetchFiles(JSON.parse(req.body.parts)[0], (allFiles: string[]) => {
-            console.log('request took ' + (Date.now() - start) + ' ms to complete');
-            const data = {};
-            Object.keys(allFiles).forEach((key) => {
-                data[key] = PREFIX_PLAIN_TEXT_B64 + btoa_utf8(allFiles[key]);
+        var d = domain.create();
+        var responseHasBeenSent = false;
+        d.on('error', function(er) {
+            if (!responseHasBeenSent) {
+                responseHasBeenSent = true;
+                console.log(er);
+                res.status(500).send(er);
+            }
+        });
+        d.run(function() {
+            const start = Date.now();
+            fileFetcher.fetchFiles(JSON.parse(req.body.parts)[0], (allFiles: string[]) => {
+                console.log('request took ' + (Date.now() - start) + ' ms to complete');
+                const data = {};
+                Object.keys(allFiles).forEach((key) => {
+                    data[key] = PREFIX_PLAIN_TEXT_B64 + btoa_utf8(allFiles[key]);
+                });
+                res.status(200).send(JSON.stringify(data));
             });
-            res.status(200).send(JSON.stringify(data));
         });
     });
-    });
 
-    var server = app.listen(80);
+    const server = app.listen(PORT);
+    console.log(`http://localhost:${PORT}/viewer.html`);
 }
 
 if (process.argv.length < 3)
