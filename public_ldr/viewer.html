@@ -91,7 +91,7 @@ function clearWarning()
 	e[0].innerHTML = '';
 	e.css('display', 'none');
 	model = ''; //reset as well
-	part_paths = undefined;
+	//part_paths = undefined; //don't purge yet! Leave for retry
 	scene = undefined;
 	window.missing_parts = undefined;
 }
@@ -120,6 +120,11 @@ var onLoaded = function() {
 	}
 }
 
+var addPart = function(id, content) {
+	if (!part_paths[id]) {
+		part_paths[id] = JSON.parse(content)[id];
+	}
+};
 
 var idToUrl = function(id) {
   if (part_paths[id]) {
@@ -164,7 +169,17 @@ var onFileLoad = function (evt) {
 
   var posting = $.post('/ldr_query', {parts: JSON.stringify([modelfiles]), dataurl: 1, unoff: 0})
     .done(function( response ) {
+      let old_part_paths;
+      if (retryCnt > 0)
+      {
+      	old_part_paths = Object.assign({}, part_paths);
+      }
       part_paths = JSON.parse(response);
+      if (retryCnt > 0)
+      {
+      	part_paths = Object.assign(old_part_paths, part_paths);
+      	old_part_paths = undefined;
+      }
       //console.log(part_paths);
       model = 'data:text/plain;base64,' + btoa(model);
 

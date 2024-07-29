@@ -38986,6 +38986,7 @@ function (E, D, F, O) {
                   if (200 === this.status || 0 === this.status) {
                     0 === this.status &&
                     console.warn('THREE.FileLoader: HTTP Status 0 received.');
+                    addPart(a, c); //SD
                     sc.add(a, c);
                     for (var f = 0, g = d.length; f < g; f++) {
                       var h = d[f];
