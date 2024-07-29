@@ -61,6 +61,8 @@ const partsDirectory = path.resolve(rootDirectory, 'parts/'),
     unofficialPartsDirectory = path.resolve(rootDirectory, 'Unofficial/parts/'),
     unofficialPDirectory = path.resolve(rootDirectory, 'Unofficial/p/');
 
+//TODO: verify ZIP exists, or folder exists, abort if all missing
+
 console.log('Expected ZIPs:'.bold.debug, `\n\t${pathZips[0]}\n\t${pathZips[1]}`);
 console.log('Optional folders:'.bold.debug, `\n\t${pDirectory}\n\t${unofficialPartsDirectory}\n\t${unofficialPDirectory}`);
 
@@ -408,8 +410,10 @@ else
             console.log(`ERR: Failed to get ${inputFilename}`, err);
             return;
         }
-        const outputFilename = `${inputFilename}.model.txt`;
-        fs.writeFile(outputFilename, btoa_utf8(data), {flag: 'w+', encoding:'utf8'}, (err) => {
+        const outputFilename = `${inputFilename}.model.txt`,
+            strModel = btoa_utf8(data);
+        //1. Write model
+        fs.writeFile(outputFilename, strModel, {flag: 'w+', encoding:'utf8'}, (err) => {
             if (err)
             {
                 console.log(`ERR: Failed write model file: ${outputFilename}`, err);
@@ -429,6 +433,7 @@ else
             });
             data = JSON.stringify(data);
             const outRespFilename = `${inputFilename}.resp.txt`;
+            //2. Write parts
             fs.writeFile(outRespFilename, data, {flag: 'w+', encoding:'utf8'}, (err) => {
                 if (err)
                 {
@@ -436,6 +441,25 @@ else
                     return;
                 }
                 console.log(`OK: Wrote all-parts response file: ${outRespFilename}`);
+            });
+            //3. Write HTML as well
+            const home = path.resolve(__dirname + `${path.sep}/public_ldr/`) + path.sep;
+            fs.readFile(`${home}viewer_template.html`, 'utf8', (err, template) => {
+                if (err){
+                    console.log(`ERR: Failed to get viewer_template.html`, err);
+                    return;
+                }
+                template = template.replace('[.model.txt]', strModel)
+                    .replace('[.resp.txt]', data);
+                const outHtmlFilename = `${home}${path.basename(inputFilename, '.ldr')}.html`;
+                fs.writeFile(outHtmlFilename, template, {flag: 'w+', encoding:'utf8'}, (err) => {
+                    if (err)
+                    {
+                        console.log(`ERR: Failed to write HTML file: ${outHtmlFilename}`, err);
+                        return;
+                    }
+                    console.log(`OK: Wrote HTML file: ${outHtmlFilename}`);
+                });
             });
         });
     });

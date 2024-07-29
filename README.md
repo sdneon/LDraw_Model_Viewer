@@ -15,9 +15,10 @@ Am trying to pack it into a single Executable less data files for easier usage.
 * Phase 2 (mostly done): Use my Node.JS 22.x+ to run all dependencies bundled within, so no longer need the messy node_modules folder (with countless little files).
   * Also patched server and viewer to fix edge cases of missing parts. Viewer somehow needs to internally retry after requesting and receiving missing parts from server.
 * Phase 3 (work in progress; alpha version): Pack into a Node.JS SEA Single Executable Application, less data files, viewer(?) and config.
-  * Will need to add a config file or commandline option overrides to access PORT and data library path settings. Since server scripts will now be embedded and untouchable with the SEA.
+  * Commandline option overrides to access PORT and data library path settings. Since server scripts will now be embedded and untouchable with the SEA.
   * Possibly bundle web folder content (i.e. viewer) as well - will be tedious as Node.JS doesn't have a convenient virtual file system. Will have to explore zipping it or something.
   * SEA means no scripts files including node_modules needed. All are embedded within the .EXE for easy use.
+  * Another major improvement: **read the LDraw parts ZIP files (complete.zip & ldrawunf.zip) directly**. Previously, had to unzip them.
 
 # How ldraw-visualizer works
 First, a primer on how ldraw-visualizer works on [LDraw.org](https://www.ldraw.org/parts/tools/ldraw-model-viewer.html)].
@@ -38,7 +39,38 @@ Usages of Server mod:
 * At your own leisure, generate data for embed into portable viewer.
 * Run for online Viewer.
 
-### Setup
+## (Alpha!) Setup LDR.exe SEApp & Run
+1. Download LDraw parts libraries from [complete.zip here](https://library.ldraw.org/library/updates/complete.zip) and [ldrawunf.zip there](https://library.ldraw.org/library/unofficial/ldrawunf.zip). They are the official and unoffical parts (archives) respectively.
+2. Put them in say `c:\LDraw_Data\LDraw\`parts folder.
+3. Download my AIO-Server (must include ldr.EXE and public_ldr folder).
+4. Run Server for Online Viewer:
+   ```
+   Syntax:
+   ldr.exe -p <port_number> -l <path_to_ldraw_libs> [optional_model_to_convert]
+
+   E.g.s:
+   ldr.exe
+   ldr.exe -p 8080 -l "c:\LDraw_Data\LDraw\"
+   ldr.exe --port 8080 --lego "c:\LDraw_Data\LDraw\"
+   ```
+   * In browser, navigate to [http://localhost:8080/viewer.html](http://localhost:80/viewer.html). Have fun loading your Lego models.
+5. OR: Run Server to Web Page containing Lego Model:
+   ```
+   Syntax:
+   ldr.exe -p <port_number> -l <path_to_ldraw_libs> [optional_model_to_convert]
+
+   E.g.s:
+   ldr.exe c:\lego\millenium_falcon.ldr
+   ldr.exe -l "c:\LDraw_Data\LDraw\" c:\lego\millenium_falcon.ldr
+    ```
+   * This writes .model.txt & .resp.text files to your .ldr's folder, and .HTML to this distribution's `public_ldr` folder.
+   * Open the html file to view your model =)
+
+## Where to find Lego Parts
+* Official parts are on [this LDraw page](https://library.ldraw.org/updates?latest)'s "Download Links" Section's ["Complete LDraw.org Library Zip archive (complete.zip)" link](https://library.ldraw.org/library/updates/complete.zip).
+* Unofficial parts are on [this LDraw page](https://library.ldraw.org/tracker)'s ["Download All Unofficial Files" link](https://library.ldraw.org/library/unofficial/ldrawunf.zip).
+
+### Old Setup [Obsolete]
 1. Download and install LDraw parts libraries.
     a. Download AIO (all-in-one) LDraw installation package from [LDraw's Getting Started page](https://www.ldraw.org/help/getting-started.html) - actually is one of the sub-pages.
        i. E.g. for Window, you may download Draw_AIOI_2020-03_setup_32bit_v1.exe.
@@ -54,19 +86,15 @@ Usages of Server mod:
 4. If desired, configure your web server port number in `parts-server.ts`. Look for .
     * Look for `const PORT = 80;` near the top of the file, and change the number.
 
-#### Where to find Lego Parts
-* Official parts are on [this LDraw page](https://library.ldraw.org/updates?latest)'s "Download Links" Section's ["Complete LDraw.org Library Zip archive (complete.zip)" link](https://library.ldraw.org/library/updates/complete.zip).
-* Unofficial parts are on [this LDraw page](https://library.ldraw.org/tracker)'s ["Download All Unofficial Files" link](https://library.ldraw.org/library/unofficial/ldrawunf.zip).
-
-### Run Server for Online Viewer
+#### Run Server for Online Viewer [Obsolete]
 1. Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run:
    ```
    node parts-server.ts
    ```
 2. In browser, navigate to [http://localhost:80/viewer.html](http://localhost:80/viewer.html). Have fun loading your Lego models.
 
-### Run Server to Generate Data for Portable Viewer
-1. Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run:
+#### Run Server to Generate Data for Portable Viewer
+1.  [Obsolete] Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run:
    ```
    node parts-server.ts file_path_to_LDR_file
    ```
@@ -92,18 +120,9 @@ Usages of Server mod:
     * Actually, there are a few other files not embedded, like .woff2 and .css. You can try embedding them yourselves or leave them separate and make sure they can be found.
 3. Save file, and open the HTML file  in browser to view your Lego models.
 
-### (Alpha!) Run Server SEApp
-1. Simply run web server mode:
-   ```
-   ldr.exe
-   ```
-   or commandline output mode:
-   ```
-   ldr.exe file_path_to_LDR_file
-   ```
-
-Dev Notes:
+## Dev Notes
 * `ldr.ds` is all-in-one script embedded into ldr.exe the SEApp.
+  * parts-server.ts & file-fetcher.ds are obsolete and no longer update to Phase 3 codes.
 
 ## Portable Viewer Mod
 Just follow the steps in `Run Server to Generate Data for Portable Viewer`.
@@ -122,7 +141,7 @@ if (scene) { //<-- breakpoint here
 PS: Unfortunately, the LDraw page is down as of Jul 2024, as it appears to be missing ldraw scripts.
 
 # Known Issues
-There are some Lego models which fail to load, even in original viewer. Haven't figured out why. (This may be partly fixed in my 2024 update).
+There are some Lego models which fail to load when some parts are "delay-loaded", even in original viewer. Likely an async bug in LDR JS codes. (This may be partly fixed in my 2024 update).
 
 # Thanks
 Thanks to everyone who made virtual Lego builds possible!
