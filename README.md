@@ -54,10 +54,10 @@ Usages of Server mod:
    ldr.exe --port 8080 --lego "c:\LDraw_Data\LDraw\"
    ```
    * In browser, navigate to [http://localhost:8080/viewer.html](http://localhost:80/viewer.html). Have fun loading your Lego models.
-5. OR: Run Server to Web Page containing Lego Model:
+5. OR: Run Converter to generate Web Page containing Lego Model:
    ```
    Syntax:
-   ldr.exe -p <port_number> -l <path_to_ldraw_libs> [optional_model_to_convert]
+   ldr.exe -l <path_to_ldraw_libs> <model_to_convert>
 
    E.g.s:
    ldr.exe c:\lego\millenium_falcon.ldr
