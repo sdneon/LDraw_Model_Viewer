@@ -7,8 +7,7 @@ const PORT = 8080;
 //file-fetecher config
 const encoding = 'utf-8',
     //rootDirectory = __dirname + '/../../LDraw/',
-    //rootDirectory = 'c:/p/LDraw_Data/LDraw/',
-    rootDirectory = 'C:/P/LeoCAD/',
+    rootDirectory = 'c:/LDraw_Data/LDraw/',
     partsDirectory = rootDirectory + 'parts/',
     pathZips = [
         partsDirectory + 'complete.zip',
