@@ -14,8 +14,8 @@ Am trying to pack it into a single Executable less data files for easier usage.
 * Phase 1 (done): include the node module dependencies, so user won't have to find (old, compatible versions) & download them on their own.
 * Phase 2 (mostly done): Use my Node.JS 22.x+ to run all dependencies bundled within, so no longer need the messy node_modules folder (with countless little files).
   * Also patched server and viewer to fix edge cases of missing parts. Viewer somehow needs to internally retry after requesting and receiving missing parts from server.
-* Phase 3 (work in progress; alpha version): Pack into a Node.JS SEA Single Executable Application, less data files, viewer(?) and config.
-  * Commandline option overrides to access PORT and data library path settings. Since server scripts will now be embedded and untouchable with the SEA.
+* **Phase 3 (work in progress; alpha version)**: Pack into a Node.JS **SEA Single Executable Application**, less data files, viewer(?) and config.
+  * *Commandline option overrides* to access PORT and data library path settings. Since server scripts will now be embedded and untouchable with the SEA.
   * Possibly bundle web folder content (i.e. viewer) as well - will be tedious as Node.JS doesn't have a convenient virtual file system. Will have to explore zipping it or something.
   * SEA means no scripts files including node_modules needed. All are embedded within the .EXE for easy use.
   * Another major improvement: **read the LDraw parts ZIP files (complete.zip & ldrawunf.zip) directly**. Previously, had to unzip them.
@@ -122,7 +122,15 @@ Usages of Server mod:
 
 ## Dev Notes
 * `ldr.ds` is all-in-one script embedded into ldr.exe the SEApp.
-  * parts-server.ts & file-fetcher.ds are obsolete and no longer update to Phase 3 codes.
+  * parts-server.ts & file-fetcher.ds are obsolete and no longer updated to Phase 3 codes.
+  * To turn into a SEApp, use my [makeSea](https://github.com/sdneon/makeSea):
+    ```
+    node makeSea.js ldr.ds
+    ```
+    which produces the SEApp, ldr.exe.
+* If you are making your own SEApp, use some bundler like [webpack](https://webpack.js.org/) or browserify like [my browserifySEApp](https://github.com/sdneon/browserifySEApp) to bundle/pack/minify and embed dependencies into your bootstrap script.
+  * Use an online minifier like [Minify JS Online](minify-js.com/) to further compress the outputs.
+  * PS: browserify may be outdated and does not keep up with the latest JS syntax.
 
 ## Portable Viewer Mod
 Just follow the steps in `Run Server to Generate Data for Portable Viewer`.
@@ -134,7 +142,7 @@ part_paths = JSON.parse(response);
 //console.log(part_paths);
 model = 'data:text/plain;base64,' + btoa(model);
 if (scene) { //<-- breakpoint here
-```
+``` 
 * Switch to debugger's Console tab to print `part_paths` and `model` and use 'Copy Object' (or equivalent) to copy each piece of data out.
     *  These 2 pieces of course then go right into the embed.
 
