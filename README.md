@@ -54,6 +54,10 @@ Usages of Server mod:
 4. If desired, configure your web server port number in `parts-server.ts`. Look for .
     * Look for `const PORT = 80;` near the top of the file, and change the number.
 
+#### Where to find Lego Parts
+* Official parts are on [this LDraw page](https://library.ldraw.org/updates?latest)'s "Download Links" Section's ["Complete LDraw.org Library Zip archive (complete.zip)" link](https://library.ldraw.org/library/updates/complete.zip).
+* Unofficial parts are on [this LDraw page](https://library.ldraw.org/tracker)'s ["Download All Unofficial Files" link](https://library.ldraw.org/library/unofficial/ldrawunf.zip).
+
 ### Run Server for Online Viewer
 1. Using [Node.JS+ >= 16.6.0.1](https://github.com/sdneon/node/releases), simple run:
    ```

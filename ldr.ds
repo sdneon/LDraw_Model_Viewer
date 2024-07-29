@@ -2,20 +2,13 @@
 /// <reference path="../typings/references.ts" />
 /// <reference path="./file-fetcher.ts" />
 
-const PORT = 8080;
+let PORT = 8080;
 
 //file-fetecher config
-const encoding = 'utf-8',
-    //rootDirectory = __dirname + '/../../LDraw/',
-    rootDirectory = 'c:/LDraw_Data/LDraw/',
-    partsDirectory = rootDirectory + 'parts/',
-    pathZips = [
-        partsDirectory + 'complete.zip',
-        partsDirectory + 'ldrawunf.zip'
-    ],
-    pDirectory = rootDirectory + 'p/',
-    unofficialPartsDirectory = rootDirectory + 'Unofficial/parts/',
-    unofficialPDirectory = rootDirectory + 'Unofficial/p/';
+const encoding = 'utf-8';
+let
+    //rootDirectory = __dirname + '/../../LDraw/';
+    rootDirectory = 'c:/LDraw_Data/LDraw/';
 
 console.log("---".bold.white);
 
@@ -31,6 +24,45 @@ function btoa_utf8(input)
 {
     return Buffer.from(input, 'utf8').toString('base64');
 }
+
+const path = require('path'),
+    nopt = require('nopt'),
+    knownOpts = {
+        port: Number, //port number for web server
+        lego: [String, null]
+    },
+    shortHands = {
+        p: ['--port'],
+        l: ['--lego']
+    },
+    // everything is optional.
+    // knownOpts and shorthands default to {}
+    // arg list defaults to process.argv
+    // slice defaults to 2
+    parsed = nopt(knownOpts, shortHands, process.argv, 2);
+
+if (parsed.lego)
+{
+    rootDirectory = path.resolve(parsed.lego) + path.sep;
+    console.log('Lego Parts folder changed to:'.bold.debug, rootDirectory);
+}
+if (parsed.port)
+{
+    PORT = parsed.port;
+    console.log('Port changed to:'.bold.debug, PORT);
+}
+
+const partsDirectory = path.resolve(rootDirectory, 'parts/'),
+    pathZips = [
+        path.resolve(partsDirectory, 'complete.zip'),
+        path.resolve(partsDirectory, 'ldrawunf.zip')
+    ],
+    pDirectory = path.resolve(rootDirectory, 'p/'),
+    unofficialPartsDirectory = path.resolve(rootDirectory, 'Unofficial/parts/'),
+    unofficialPDirectory = path.resolve(rootDirectory, 'Unofficial/p/');
+
+console.log('Expected ZIPs:'.bold.debug, `\n\t${pathZips[0]}\n\t${pathZips[1]}`);
+console.log('Optional folders:'.bold.debug, `\n\t${pDirectory}\n\t${unofficialPartsDirectory}\n\t${unofficialPDirectory}`);
 
 const AdmZip = require("adm-zip");
 let zips,
@@ -74,7 +106,6 @@ function loadPartsZips()
         loadPartsZip(1);
     }
 }
-loadPartsZips(); //TEST
 
 function findInZips(filename, cleanComments, files)
 {
@@ -361,7 +392,7 @@ function spawnServer()
     console.log(`http://localhost:${PORT}/viewer.html`);
 }
 
-if (process.argv.length < 3)
+if (parsed.argv.remain.length <= 0)
 {
     spawnServer();
 }
@@ -369,7 +400,7 @@ else
 {
     //commandline data generation mode
     const fs = require('fs'),
-        inputFilename = process.argv[2];
+        inputFilename = parsed.argv.remain[0];
     const start = Date.now();
     fs.readFile(inputFilename, { flag: 'r', encoding: 'utf8' }, (err, data) => {
         if (err)
