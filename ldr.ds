@@ -59,13 +59,6 @@ function loadPartsZip(index)
             }
             return true;
         });
-        if (baseName.indexOf('1-4ring2.dat') >= 0
-            || entryName.indexOf('1-4ring2.dat') >= 0)
-            console.log('found'.bold.red, baseName, entryName);
-        if (baseName.indexOf('LDConfig.ldr') >= 0
-            || entryName.indexOf('LDConfig.ldr') >= 0)
-            console.log('found'.bold.red, baseName, entryName);
-        //console.log(baseName);
         //if (!baseName.endsWith('.txt'))
         parts.set(baseName, entryName);
     });
@@ -149,10 +142,6 @@ const fileFetcher = {
                 // and map it to an array of just filenames
                 filenames = lines.filter(l => {
                     // only return subfile reference lines (lines that begin will line code 1)
-                    if (l.indexOf('1-4ring2.dat') >= 0)
-                    {
-                        console.log('Found:'.bold.rainbow, l);
-                    }
                     if (!/$\s*^/.test(l)) {
                         var splitLine = l.trim().split(/\s+/g)
                         if (splitLine[0] === '1') {
