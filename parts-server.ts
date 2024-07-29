@@ -1,8 +1,7 @@
 /// <reference path="../typings/references.ts" />
 /// <reference path="./file-fetcher.ts" />
 
-const PORT = 80;
-const FALLBACK_PART = '6141.dat';
+let PORT = 8080;
 
 require('./ldr-deps.min.js');
 
@@ -18,7 +17,7 @@ function btoa_utf8(input)
     return Buffer.from(input, 'utf8').toString('base64');
 }
 
-const fileFetcher = require('./file-fetcher.ts');
+const fileFetcher = require('./file-fetcher.ds');
 
 function spawnServer()
 {
@@ -46,8 +45,6 @@ function spawnServer()
         });
         d.run(function() {
             const start = Date.now();
-            if (parts.indexOf(FALLBACK_PART) < 0)
-                parts.push(FALLBACK_PART);
             fileFetcher.fetchFiles(parts, (allFiles: string[]) => {
                 console.log('request took ' + (Date.now() - start) + ' ms to complete');
                 const data = {};

@@ -1,0 +1,293 @@
+#ds
+const fs = require('fs');
+
+#ts
+var files: { [filename: string]: string } = {},
+    encoding = 'utf-8',
+    //rootDirectory = __dirname + '/../../LDraw/',
+    rootDirectory = 'c:/LDraw_Data/LDraw/',
+    partsDirectory = rootDirectory + 'parts/',
+    pathZips = [
+        partsDirectory + 'complete.zip',
+        partsDirectory + 'ldrawunf.zip'
+    ],
+    pDirectory = rootDirectory + 'p/',
+    unofficialPartsDirectory = rootDirectory + 'Unofficial/parts/',
+    unofficialPDirectory = rootDirectory + 'Unofficial/p/';
+#end
+
+const AdmZip = require("adm-zip");
+let zips,
+    partsInZip;
+
+function loadPartsZip(index)
+{
+    const zip = zips[index] = new AdmZip(pathZips[index]);
+    const entries = zip.getEntries();
+    const parts = new Map();
+    partsInZip[index] = parts;
+    const folders = [
+        'ldraw/models/', 'ldraw/parts/', 'ldraw/p/',
+        'ldraw/', 'models/', 'parts/', 'p/'
+    ];
+    entries.map((zipEntry) => {
+        //console.log(zipEntry.toString()); // outputs zip entries information
+        //console.log(zipEntry.entryName);
+        let { entryName } = zipEntry,
+            baseName = entryName;
+        folders.every((folder) => {
+            if (baseName.startsWith(folder))
+            {
+                baseName = baseName.substring(folder.length);
+                return false;
+            }
+            return true;
+        });
+        //if (!baseName.endsWith('.txt'))
+        parts.set(baseName, entryName);
+    });
+    console.log('#parts in zip:'.bold.debug, parts.size);
+}
+
+function loadPartsZips()
+{
+    if (!zips)
+    {
+        zips = []; partsInZip = [];
+        loadPartsZip(0);
+        loadPartsZip(1);
+    }
+}
+
+function findInZips(filename, cleanComments, files)
+{
+    for (let i = 0; i < 2; ++i)
+    {
+        if (partsInZip[i].has(filename))
+        {
+            const data = zips[i].readAsText(partsInZip[i].get(filename));
+            //console.log('Found in zip:'.bold.debug, filename);
+            if (files)
+                files[filename] = cleanComments(data);
+            return data;
+        }
+    }
+    return false;
+}
+
+function removeDups(filenames)
+{
+    return [...(new Set(filenames))];
+}
+
+#ts
+/**
+ * Remove all comments from given string
+ **/
+function cleanComments(content: string)
+{
+    if ((content.length <= 0) || (content.indexOf('//') < 0))
+    {
+        return content;
+    }
+    content = content.split(/\r?\n/);
+    content.forEach((line, j) => {
+        const i = line.indexOf('//');
+        if (i >= 0)
+        {
+            content[j] = line.substring(0, i);
+        }
+    });
+    return content.join('\n');
+}
+
+/**
+ * Recursively load all LDR files needed
+ * @param filenames (string[] | string) Can be LDR file content as a string, or array of filenames
+ **/
+var getSubfiles = (filenames: string[] | string, completedCallback: (allFiles: { [filename: string]: string }) => void) => {
+    // keeps track of how many subfiles we've successfully fetched.
+    // when completedCount === the number of subfile references, we're done with this file
+    let completedCount = 0;
+
+    if (typeof filenames === 'string')
+    {
+        // the file split into individual lines;
+        var lines = filenames.split(/\r?\n/g);
+
+        // break this file down into lines, filter out any non-subfile reference lines,
+        // and map it to an array of just filenames
+        filenames = lines.filter(l => {
+            // only return subfile reference lines (lines that begin will line code 1)
+            if (!/$\s*^/.test(l)) {
+                var splitLine = l.trim().split(/\s+/g)
+                if (splitLine[0] === '1') {
+                    return true;
+                }
+            }
+            return false;
+        }).map(m => {
+            // return the filename
+            return m.trim().split(/\s+/g)[14];
+        });
+    }
+    filenames = removeDups(filenames); //remove duplicates
+
+    if (filenames.length > 0)
+    {
+        filenames.forEach((filename, i, arr) => {
+            filename = filename.toLowerCase().replace(/\\/g, '/');
+
+            if (!(filename in files)) {
+                // if we haven't already fetched this file (or at least started the fetching process)
+
+                // create a placeholder for this file so we won't try and fetch it again
+                files[filename] = null;
+
+                            // find the file in zips
+                            let data = findInZips(filename, cleanComments, files);
+                            if ('string' === typeof data)
+                            {
+                                getSubfiles(data, () => {
+                                    completedCount++;
+                                    if (completedCount === arr.length) {
+                                        completedCallback(files);
+                                    }
+                                });
+                                return;
+                            }
+                // find the file
+                fs.stat(partsDirectory + filename, (err, stat) => {
+                    if (err === null) {
+                        // we found the file in the parts directory
+
+                        fs.readFile(partsDirectory + filename, encoding, (err, data) => {
+                            files[filename] = cleanComments(data);
+
+                            // fetch this file's subfiles
+                            getSubfiles(data, () => {
+                                completedCount++;
+                                if (completedCount === arr.length) {
+                                    completedCallback(files);
+                                }
+                            });
+                        });
+                    } else {
+                        // we didn't find the file in the parts directory, look in the p directory
+
+                        fs.stat(pDirectory + filename, (err, stat) => {
+                            if (err === null) {
+                                fs.readFile(pDirectory + filename, encoding, (err, data) => {
+                                    files[filename] = cleanComments(data);
+
+                                    // fetch this file's subfiles
+                                    getSubfiles(data, () => {
+                                        completedCount++;
+                                        if (completedCount === arr.length) {
+                                            completedCallback(files);
+                                        }
+                                    });
+                                });
+                            } else {
+                                // still no luck, let's check the unofficial parts directory
+
+                                fs.stat(unofficialPartsDirectory + filename, (err, stat) => {
+                                    if (err === null) {
+                                        // we found the file in the parts directory
+
+                                        fs.readFile(unofficialPartsDirectory + filename, encoding, (err, data) => {
+                                            files[filename] = cleanComments(data);
+
+                                            // fetch this file's subfiles
+                                            getSubfiles(data, () => {
+                                                completedCount++;
+                                                if (completedCount === arr.length) {
+                                                    completedCallback(files);
+                                                }
+                                            });
+                                        });
+                                    } else {
+                                        // last chance, let's check the unofficial p directory
+
+                                        fs.stat(unofficialPDirectory + filename, (err, stat) => {
+                                            if (err === null) {
+                                                // we found the file in the parts directory
+
+                                                fs.readFile(unofficialPDirectory + filename, encoding, (err, data) => {
+                                                    files[filename] = cleanComments(data);
+
+                                                    // fetch this file's subfiles
+                                                    getSubfiles(data, () => {
+                                                        completedCount++;
+                                                        if (completedCount === arr.length) {
+                                                            completedCallback(files);
+                                                        }
+                                                    });
+                                                });
+                                            } else {
+
+                                                // we didn't find the part, let's ignore it,
+                                                // it might be part of a .mpd
+                                                files[filename] = '';
+                                                console.log('Failed to find:'.bold.error, filename);
+
+                                                completedCount++;
+                                                if (completedCount === arr.length) {
+                                                    completedCallback(files);
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            } else {
+                // we've previously fetched this file (or are already in the process of fetching it).
+                // don't try and fetch it again.
+
+                completedCount++;
+                if (completedCount === arr.length) {
+                    completedCallback(files);
+                }
+            }
+        });
+    }
+    //if (filenames.length === 0)
+    else {
+        // this file didn't have any further subfile references, so just call the callback immediately
+        completedCallback(files);
+    }
+}
+
+module.exports = {
+    fetchFiles: (filenames: string[] | string, completedCallback: (allFiles: { [filename: string]: string }) => void) => {
+        loadPartsZips();
+
+        // store the provided file in the "files" object
+        //files['$rootfile$'] = rootFile;
+
+        // begin the recursive subfile-fetching process
+        getSubfiles(filenames, (allFiles) => {
+            // also get LDConfig.ldr
+            var ldConfigFilename = 'LDConfig.ldr';
+            let data = findInZips(ldConfigFilename, cleanComments);
+            if ('string' === typeof data)
+            {
+                allFiles[ldConfigFilename] = data;
+                completedCallback(allFiles);
+                return;
+            }
+            fs.readFile(rootDirectory + ldConfigFilename, encoding, (err, data) => {
+                if (err === null) {
+                    allFiles[ldConfigFilename] = data;
+                    completedCallback(allFiles);
+                } else {
+                    throw 'LDConfig.ldr not found';
+                }
+            });
+        });
+    }
+}
+#end
