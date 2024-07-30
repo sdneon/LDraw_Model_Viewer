@@ -14,11 +14,12 @@ Am trying to pack it into a single Executable less data files for easier usage.
 * Phase 1 (done): include the node module dependencies, so user won't have to find (old, compatible versions) & download them on their own.
 * Phase 2 (mostly done): Use my Node.JS 22.x+ to run all dependencies bundled within, so no longer need the messy node_modules folder (with countless little files).
   * Also patched server and viewer to fix edge cases of missing parts. Viewer somehow needs to internally retry after requesting and receiving missing parts from server.
-* **Phase 3 (work in progress; alpha version)**: Pack into a Node.JS **SEA Single Executable Application**, less data files, viewer(?) and config.
+* **Phase 3 (work in progress; alpha version)**: Pack into a Node.JS **SEA Single Executable Application**, less data files and config.
   * *Commandline option overrides* to access PORT and data library path settings. Since server scripts will now be embedded and untouchable with the SEA.
-  * Possibly bundle web folder content (i.e. viewer) as well - will be tedious as Node.JS doesn't have a convenient virtual file system. Will have to explore zipping it or something.
+  * Web folder content (i.e. viewer) now bundled as well - will be extracted if it does not exist.
   * SEA means no scripts files including node_modules needed. All are embedded within the .EXE for easy use.
   * Another major improvement: **read the LDraw parts ZIP files (complete.zip & ldrawunf.zip) directly**. Previously, had to unzip them.
+  * Informs user which LDraw parts zip or folder exists, and aborts if none exists. If so, do use `-l <path>` option to set the correct path to those assets. 
 
 # How ldraw-visualizer works
 First, a primer on how ldraw-visualizer works on [LDraw.org](https://www.ldraw.org/parts/tools/ldraw-model-viewer.html)].
