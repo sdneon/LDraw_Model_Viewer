@@ -27,7 +27,8 @@ function btoa_utf8(input)
 
 console.log("---".bold.white);
 
-const fs = require('fs');
+const AdmZip = require("adm-zip"),
+    fs = require('fs');
     path = require('path'),
     nopt = require('nopt'),
     knownOpts = {
@@ -69,10 +70,28 @@ function exists(path)
     return (fs.statSync(path, { throwIfNoEntry: false }) !== undefined);
 }
 
+const home = path.resolve(__dirname + `${path.sep}/public_ldr/`) + path.sep,
+    sea = require('node:sea'),
+    isSea = sea.isSea();
+//console.log('isSea:'.bold.debug, isSea);
+if (isSea)
+{
+    //check for web folder
+    if (!exists(home))
+    {
+        //does not exist, so extract from SEApp asset
+        const asset = Buffer.from(sea.getAsset('public_ldr.zip')),
+            zip = new AdmZip(asset);
+        console.log('Extracting web folder...'.bold.warn);
+        zip.extractAllTo(__dirname);
+        console.log('Extracting web folder...done =)'.bold.info);
+    }
+}
+
 //verify ZIP exists, or folder exists, abort if all missing
-const zip1Exists = exists(pathZips[0]),
-    zip2Exists = exists(pathZips[1]),
-    path1Exists = exists(partsDirectory),
+let zip1Exists = exists(pathZips[0]),
+    zip2Exists = exists(pathZips[1]);
+const path1Exists = exists(partsDirectory),
     path2Exists = exists(pDirectory),
     path3Exists = exists(unofficialPartsDirectory),
     path4Exists = exists(unofficialPDirectory),
@@ -83,8 +102,47 @@ console.log('Optional folders:'.bold.debug, `\n\t${path1Exists?'OK'.bold.info:'X
 
 if (!zip1Exists && !zip2Exists)
 {
-    console.log('Warning: parts ZIP archives NOT found!'.bold.warn, anyPathExists);
-    if (!anyPathExists)
+    console.log('Warning: parts ZIP archives NOT found!'.bold.warn);
+    let resolved = false;
+    //Check current folder for ZIPs
+    const curFolder = __dirname + path.sep,
+        pathZip1 = curFolder + 'complete.zip',
+        pathZip2 = curFolder + 'ldrawunf.zip';
+    if (exists(pathZip1))
+    {
+        pathZips[0] = pathZip1;
+        zip1Exists = true;
+        resolved = true;
+        console.log('Found local parts Official Parts ZIP archive, using it instead =)'.bold.info);
+    }
+    if (exists(pathZip2))
+    {
+        pathZips[1] = pathZip2;
+        zip2Exists = true;
+        resolved = true;
+        console.log('Found local parts Unofficial Parts ZIP archive, using it instead =)'.bold.info);
+    }
+    //Provide them if this is SEApp with ZIPs embedded
+    if (!zip1Exists && !zip2Exists && isSea)
+    {
+        let zipOff;
+        try
+        {
+            zipOff = sea.getRawAsset('complete.zip');
+            pathZips[0] = pathZip1;
+            fs.writeFileSync(pathZip1, Buffer.from(zipOff));
+            zipOff = sea.getRawAsset('ldrawunf.zip');
+            fs.writeFileSync(pathZip2, Buffer.from(zipOff));
+            pathZips[1] = pathZip2;
+            resolved = true;
+            console.log('Unpacked and will be using bundled parts ZIP archives =)'.bold.info);
+        }
+        catch (ignore)
+        {
+            console.log('This version does Not have parts ZIP archive in it.');
+        }
+    }
+    if (!resolved && !anyPathExists)
     {
         console.log('ERROR: parts ZIP archives and folders NOT found! Quitting now.'.bold.error);
         process.exit(1);
@@ -103,7 +161,6 @@ else
     }
 }
 
-const AdmZip = require("adm-zip");
 let zips,
     partsInZip;
 
@@ -437,24 +494,6 @@ function spawnServer()
 
     const server = app.listen(PORT);
     console.log(`http://localhost:${PORT}/viewer.html`);
-}
-
-const home = path.resolve(__dirname + `${path.sep}/public_ldr/`) + path.sep,
-    sea = require('node:sea'),
-    isSea = sea.isSea();
-//console.log('isSea:'.bold.debug, isSea);
-if (isSea)
-{
-    //check for web folder
-    if (!exists(home))
-    {
-        //does not exist, so extract from SEApp asset
-        const asset = Buffer.from(sea.getAsset('public_ldr.zip')),
-            zip = new AdmZip(asset);
-        console.log('Extracting web folder...'.bold.warn);
-        zip.extractAllTo(__dirname);
-        console.log('Extracting web folder...done =)'.bold.info);
-    }
 }
 
 if (parsed.argv.remain.length <= 0)
