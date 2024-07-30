@@ -14,11 +14,14 @@ Am trying to pack it into a single Executable less data files for easier usage.
 * Phase 1 (done): include the node module dependencies, so user won't have to find (old, compatible versions) & download them on their own.
 * Phase 2 (mostly done): Use my Node.JS 22.x+ to run all dependencies bundled within, so no longer need the messy node_modules folder (with countless little files).
   * Also patched server and viewer to fix edge cases of missing parts. Viewer somehow needs to internally retry after requesting and receiving missing parts from server.
-* **Phase 3 (work in progress; alpha version)**: Pack into a Node.JS **SEA Single Executable Application**, less data files and config.
+* **Phase 3 (work in progress; beta version)**: Pack into a Node.JS **SEA Single Executable Application** - all are embedded within the .EXE for easy use.
   * *Commandline option overrides* to access PORT and data library path settings. Since server scripts will now be embedded and untouchable with the SEA.
-  * Web folder content (i.e. viewer) now bundled as well - will be extracted if it does not exist.
-  * SEA means no scripts files including node_modules needed. All are embedded within the .EXE for easy use.
-  * Another major improvement: **read the LDraw parts ZIP files (complete.zip & ldrawunf.zip) directly**. Previously, had to unzip them.
+  * A major improvement: **read the LDraw parts ZIP files (complete.zip & ldrawunf.zip) directly**. Previously, had to unzip them.
+  * LDraw parts ZIP archives and Web folder content (i.e. viewer) now bundled as well - will be extracted if not found.
+    * Parts bundles are in [ldr_full.exe](https://github.com/sdneon/LDraw_Model_Viewer/releases/download/v3.2.0/ldr_full.exe) only:
+      * Official parts 'complete.zip' updated till 30 Jun 2024
+      * Unofficial parts 'ldrawunf.zip' updated till 28 Jul 2024
+    * Use the smaller [ldr.exe](https://github.com/sdneon/LDraw_Model_Viewer/blob/main/ldr.exe) if using your own parts folder/archives.
   * Informs user which LDraw parts zip or folder exists, and aborts if none exists. If so, do use `-l <path>` option to set the correct path to those assets. 
 
 # How ldraw-visualizer works
@@ -40,8 +43,26 @@ Usages of Server mod:
 * At your own leisure, generate data for embed into portable viewer.
 * Run for online Viewer.
 
-## (Alpha!) Setup LDR.exe SEApp & Run
-1. Download LDraw parts libraries from [complete.zip here](https://library.ldraw.org/library/updates/complete.zip) and [ldrawunf.zip there](https://library.ldraw.org/library/unofficial/ldrawunf.zip). They are the official and unoffical parts (archives) respectively.
+## (Beta!) Setup LDR_Full.exe SEApp & Run
+FULL version comes with LDraw parts bundled.
+1. Just download [ldr_full.exe](https://github.com/sdneon/LDraw_Model_Viewer/releases/download/v3.2.0/ldr_full.exe)  and run.
+   1. Run Server for Online Viewer:
+      ```
+      Simply:
+      ldr_full.exe
+
+      Syntax for configuration overrides:
+      ldr_full.exe -p <port_number> -l <path_to_ldraw_libs> [optional_model_to_convert]
+
+      E.g.s:
+      ldr_full.exe -p 8080 -l "c:\LDraw_Data\LDraw\"
+      ldr_full.exe --port 8080 --lego "c:\LDraw_Data\LDraw\"
+      ```
+2. Optionally once in a while, update LDraw parts libraries from [complete.zip here](https://library.ldraw.org/library/updates/complete.zip) and [ldrawunf.zip there](https://library.ldraw.org/library/unofficial/ldrawunf.zip). They are the official and unoffical parts (archives) respectively.
+
+## (Beta!) Setup LDR.exe SEApp & Run
+This version does NOT come with LDraw parts.
+1. Download LDraw parts libraries from [complete.zip here](https://library.ldraw.org/library/updates/complete.zip) and [ldrawunf.zip there](https://library.ldraw.org/library/unofficial/ldrawunf.zip).
 2. Put them in say `c:\LDraw_Data\LDraw\`parts folder.
 3. Download my AIO-Server (must include ldr.EXE and public_ldr folder).
 4. Run Server for Online Viewer:
