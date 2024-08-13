@@ -230,12 +230,15 @@ function findInFolder(folder, filename, cb)
     fs.stat(partsDirectory + filename, cb);
 }
 
-function removeDups(filenames)
+function removeDups(filenames, remove)
 {
-    return [...(new Set(filenames))];
+    remove.add(undefined);
+    const r = (new Set(filenames)).difference(remove);
+    return [...r];
 }
 
 #ts
+const REGEX_SUBMODEL = /^\s*(?:[^ \t]+\s+){14}(.+?)\s*$/gm;
 const fileFetcher = {
     fetchFiles: (filenames: string[] | string, completedCallback: (allFiles: { [filename: string]: string }) => void) => {
         loadPartsZips();
@@ -280,38 +283,27 @@ const fileFetcher = {
                 // and map it to an array of just filenames
                 filenames = lines.filter(l => {
                     // only return subfile reference lines (lines that begin will line code 1)
-                    if (!/$\s*^/.test(l)) {
-                        const splitLine = l.trim().split(/\s+/g);
-                        if (splitLine[0] === '1') {
-                            return true;
-                        }
-                    }
+                    l = l.trim();
                     if (l.startsWith('0 FILE '))
                     {
                         submodels.add(l.substring(7).trim().toLowerCase());
                     }
-                    return false;
-                }).map(m => {
+                    return ((l[0] === '1') && ((l[1] === ' ') || (l[1] === '\t')));
+                }).map(l => {
                     // return the filename
-                    const splitLine = m.trim().split(/\s+/g);
-                    if (splitLine.length <= 15)
+                    REGEX_SUBMODEL.lastIndex = 0; //reset
+                    const m = REGEX_SUBMODEL.exec(l);
+                    if (m)
                     {
-                        return splitLine[14];
-                    }
-                    else
-                    {
-                        splitLine.splice(0, 14);
-                        return splitLine.join(' ');
+                        return m[1].toLowerCase().replace(/\\/g, '/');
                     }
                 });
             }
-            filenames = removeDups(filenames); //remove duplicates
+            filenames = removeDups(filenames, submodels); //remove duplicates
 
             if (filenames.length > 0)
             {
                 filenames.forEach((filename, i, arr) => {
-                    filename = filename.toLowerCase().replace(/\\/g, '/');
-
                     if (!(filename in files)) {
                         // if we haven't already fetched this file (or at least started the fetching process)
 
@@ -401,10 +393,7 @@ const fileFetcher = {
                                                         // we didn't find the part, let's ignore it,
                                                         // it might be part of a .mpd
                                                         files[filename] = '';
-                                                        if (!submodels.has(filename))
-                                                        {
-                                                            console.log('Failed to find:'.bold.error, filename);
-                                                        }
+                                                        console.log('Failed to find:'.bold.error, filename);
 
                                                         completedCount++;
                                                         if (completedCount === arr.length) {
