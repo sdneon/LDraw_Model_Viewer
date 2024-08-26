@@ -33,11 +33,13 @@ const AdmZip = require("adm-zip"),
     nopt = require('nopt'),
     knownOpts = {
         port: Number, //port number for web server
-        lego: [String, null]
+        lego: [String, null],
+        hidden: Boolean
     },
     shortHands = {
         p: ['--port'],
-        l: ['--lego']
+        l: ['--lego'], //specify path to Lego partss
+        h: ['--hidden'] //show hidden pieces; def: remove hidden pieces
     },
     // everything is optional.
     // knownOpts and shorthands default to {}
@@ -508,6 +510,8 @@ if (parsed.argv.remain.length <= 0)
 }
 else
 {
+    const HIDDEN_PART = '0 !LEOCAD PIECE HIDDEN';
+
     //commandline data generation mode
     const inputFilename = parsed.argv.remain[0];
     const start = Date.now();
@@ -517,6 +521,24 @@ else
             console.log(`ERR: Failed to get ${inputFilename}`, err);
             return;
         }
+        if (!parsed.hidden && (data.indexOf(HIDDEN_PART) >= 0))
+        {
+            //remove hidden parts
+            const lines = data.split(/\r\n|\r|\n/);
+            let cnt = lines.length;
+            for (let i = 0; i < cnt; ++i)
+            {
+                if (lines[i].startsWith('0 !LEOCAD PIECE HIDDEN'))
+                {
+                    lines.splice(i, 2); //hidden part is in next line, so remove both lines
+                    cnt -= 2;
+                    --i;
+                }
+            }
+            //update with hidden pieces removed for LDR to render
+            data = lines.join('\n');
+        }
+
         const outputFilename = `${inputFilename}.model.txt`,
             strModel = btoa_utf8(data);
         //1. Write model

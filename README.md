@@ -22,7 +22,9 @@ Am trying to pack it into a single Executable less data files for easier usage.
       * Official parts 'complete.zip' updated till 30 Jun 2024
       * Unofficial parts 'ldrawunf.zip' updated till 28 Jul 2024
     * Use the smaller [ldr.exe](https://github.com/sdneon/LDraw_Model_Viewer/blob/main/ldr.exe) if using your own parts folder/archives.
-  * Informs user which LDraw parts zip or folder exists, and aborts if none exists. If so, do use `-l <path>` option to set the correct path to those assets. 
+  * Informs user which LDraw parts zip or folder exists, and aborts if none exists. If so, do use `-l <path>` option to set the correct path to those assets.
+  * [New; not in .EXE yet] Viewer no longer renders *hidden* Lego pieces (hidden by LeoCAD).
+    * `-h` commandline option to retain hidden pieces.
 
 # How ldraw-visualizer works
 First, a primer on how ldraw-visualizer works on [LDraw.org](https://www.ldraw.org/parts/tools/ldraw-model-viewer.html)].
@@ -79,7 +81,8 @@ This version does NOT come with LDraw parts.
 5. OR: Run Converter to generate Web Page containing Lego Model:
    ```
    Syntax:
-   ldr.exe -l <path_to_ldraw_libs> <model_to_convert>
+   ldr.exe -l <path_to_ldraw_libs> [-h] <model_to_convert>
+   -h: retain hidden pieces; default: remove hidden pieces
 
    E.g.s:
    ldr.exe c:\lego\millenium_falcon.ldr

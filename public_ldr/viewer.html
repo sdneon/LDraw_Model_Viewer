@@ -87,13 +87,13 @@ var onProgress = function(id) {
 
 function clearWarning()
 {
-	const e = $('#warning');
-	e[0].innerHTML = '';
-	e.css('display', 'none');
-	model = ''; //reset as well
-	//part_paths = undefined; //don't purge yet! Leave for retry
-	scene = undefined;
-	window.missing_parts = undefined;
+    const e = $('#warning');
+    e[0].innerHTML = '';
+    e.css('display', 'none');
+    model = ''; //reset as well
+    //part_paths = undefined; //don't purge yet! Leave for retry
+    scene = undefined;
+    window.missing_parts = undefined;
 }
 
 var onLoaded = function() {
@@ -102,28 +102,28 @@ var onLoaded = function() {
     $('#progress').text('');
     $("#progress").transition('hide');
     $("#canvas").transition('show');
-	let mp = window.missing_parts;
-	if (mp)
-	{
-		const e = $('#warning');
-		mp = Object.keys(mp);
-		if (mp.length > 0)
-		{
-			e[0].innerHTML = '<b>Missing parts</b>:<br>' + mp.join(',');
-			e.css('display', '');
-			if (retryCnt <= 0)
-			{
-				++retryCnt;
-				setTimeout(handleSubmit, 0);
-			}
-		}
-	}
+    let mp = window.missing_parts;
+    if (mp)
+    {
+        const e = $('#warning');
+        mp = Object.keys(mp);
+        if (mp.length > 0)
+        {
+            e[0].innerHTML = '<b>Missing parts</b>:<br>' + mp.join(',');
+            e.css('display', '');
+            if (retryCnt <= 0)
+            {
+                ++retryCnt;
+                setTimeout(handleSubmit, 0);
+            }
+        }
+    }
 }
 
 var addPart = function(id, content) {
-	if (!part_paths[id]) {
-		part_paths[id] = JSON.parse(content)[id];
-	}
+    if (!part_paths[id]) {
+        part_paths[id] = JSON.parse(content)[id];
+    }
 };
 
 var idToUrl = function(id) {
@@ -147,6 +147,23 @@ var idToTextureUrl = function(id) {
 var onFileLoad = function (evt) {
   model = evt.target.result;
   modeltext = model.split(/\r\n|\r|\n/);
+
+  //remove hidden pieces not meant to be displayed
+  let cnt = modeltext.length,
+    updateModel = false;
+  for (let i = 0; i < cnt; ++i)
+  {
+    if (modeltext[i].startsWith('0 !LEOCAD PIECE HIDDEN'))
+    {
+        modeltext.splice(i, 2); //hidden part is in next line, so remove both lines
+        cnt -= 2;
+        --i;
+        updateModel = true;
+    }
+  }
+  if (updateModel) //moded with hidden pieces removed for LDR to render
+    model = modeltext.join('\n');
+
   var mpdfiles = [];
   // get list of embedded files in the mpd
   modeltext.forEach(function(line) {
@@ -165,26 +182,26 @@ var onFileLoad = function (evt) {
       }
     }
   });
-  console.log("Data sent to LDraw.org: ", modelfiles);
+  //console.log("Data sent to LDraw.org: ", modelfiles);
 
   var posting = $.post('/ldr_query', {parts: JSON.stringify([modelfiles]), dataurl: 1, unoff: 0})
     .done(function( response ) {
       let old_part_paths;
       if (retryCnt > 0)
       {
-      	old_part_paths = Object.assign({}, part_paths);
+        old_part_paths = Object.assign({}, part_paths);
       }
       part_paths = JSON.parse(response);
       if (retryCnt > 0)
       {
-      	part_paths = Object.assign(old_part_paths, part_paths);
-      	old_part_paths = undefined;
+        part_paths = Object.assign(old_part_paths, part_paths);
+        old_part_paths = undefined;
       }
       //console.log(part_paths);
       model = 'data:text/plain;base64,' + btoa(model);
 
       if (!part_paths['6141.dat']) //insert fallback 1x1 stud part, in case server fails to even return this!
-      	part_paths['6141.dat'] = 'data:text/plain;base64,MCBQbGF0ZSAgMSB4ICAxIFJvdW5kDQowIE5hbWU6IDYxNDEuZGF0DQowIEF1dGhvcjogSmFtZXMgSmVzc2ltYW4NCjAgIUxEUkFXX09SRyBQYXJ0IFVQREFURSAyMDE1LTAxDQowICFMSUNFTlNFIFJlZGlzdHJpYnV0YWJsZSB1bmRlciBDQ0FMIHZlcnNpb24gMi4wIDogc2VlIENBcmVhZG1lLnR4dA0KDQowIEJGQyBDRVJUSUZZIENDVw0KDQowICFISVNUT1JZIDE5OTgtMDYtMjAgW1BUYWRtaW5dIE9mZmljaWFsIFVwZGF0ZSAxOTk4LTA2DQowICFISVNUT1JZIDIwMDMtMDEtMjkgW3NibGlzc10gIENvbXBsZXRlZCBoZWFkZXI7IEJGQydlZDsgbWlzYyBjbGVhbnVwDQowICFISVNUT1JZIDIwMDMtMDgtMDEgW1BUYWRtaW5dIE9mZmljaWFsIFVwZGF0ZSAyMDAzLTAyDQowICFISVNUT1JZIDIwMDctMTAtMjYgW1BUYWRtaW5dIEhlYWRlciBmb3JtYXR0ZWQgZm9yIENvbnRyaWJ1dG9yIEFncmVlbWVudA0KMCAhSElTVE9SWSAyMDA4LTA3LTAxIFtQVGFkbWluXSBPZmZpY2lhbCBVcGRhdGUgMjAwOC0wMQ0KMCAhSElTVE9SWSAyMDE0LTExLTI5IFtTdGVmZmVuXSBSZW5hbWVkIGZyb20gNDA3Mw0KMCAhSElTVE9SWSAyMDE0LTEyLTI4IFtNYWdGb3JzXSBQcmltaXRpdmUgc3Vic3RpdHV0aW9uDQowICFISVNUT1JZIDIwMTUtMTAtMTEgW1BUYWRtaW5dIE9mZmljaWFsIFVwZGF0ZSAyMDE1LTAxDQoNCjEgMTYgMCAzIDAgLTEgMCAwIDAgLTEuMjUgMCAwIDAgMSBzdHVkNC5kYXQNCjEgMTYgMCAzIDAgLTYgMCAwIDAgLTEgMCAwIDAgNiA0LTRkaXNjLmRhdA0KMSAxNiAwIDMgMCAtMiAwIDAgMCAtMSAwIDAgMCAyIDQtNHJpbmc0LmRhdA0KMSAxNiAwIDAgMCAxMCAwIDAgMCAzIDAgMCAwIDEwIDQtNGN5bG8uZGF0DQoxIDE2IDAgMCAwIDIgMCAwIDAgMSAwIDAgMCAyIDQtNHJpbmc0LmRhdA0KMSAxNiAwIDAgMCAyIDAgMCAwIDEgMCAwIDAgMiA0LTRyaW5nMy5kYXQNCjEgMTYgMCAwIDAgMSAwIDAgMCAxIDAgMCAwIDEgc3R1ZC5kYXQNCg==';
+        part_paths['6141.dat'] = 'data:text/plain;base64,MCBQbGF0ZSAgMSB4ICAxIFJvdW5kDQowIE5hbWU6IDYxNDEuZGF0DQowIEF1dGhvcjogSmFtZXMgSmVzc2ltYW4NCjAgIUxEUkFXX09SRyBQYXJ0IFVQREFURSAyMDE1LTAxDQowICFMSUNFTlNFIFJlZGlzdHJpYnV0YWJsZSB1bmRlciBDQ0FMIHZlcnNpb24gMi4wIDogc2VlIENBcmVhZG1lLnR4dA0KDQowIEJGQyBDRVJUSUZZIENDVw0KDQowICFISVNUT1JZIDE5OTgtMDYtMjAgW1BUYWRtaW5dIE9mZmljaWFsIFVwZGF0ZSAxOTk4LTA2DQowICFISVNUT1JZIDIwMDMtMDEtMjkgW3NibGlzc10gIENvbXBsZXRlZCBoZWFkZXI7IEJGQydlZDsgbWlzYyBjbGVhbnVwDQowICFISVNUT1JZIDIwMDMtMDgtMDEgW1BUYWRtaW5dIE9mZmljaWFsIFVwZGF0ZSAyMDAzLTAyDQowICFISVNUT1JZIDIwMDctMTAtMjYgW1BUYWRtaW5dIEhlYWRlciBmb3JtYXR0ZWQgZm9yIENvbnRyaWJ1dG9yIEFncmVlbWVudA0KMCAhSElTVE9SWSAyMDA4LTA3LTAxIFtQVGFkbWluXSBPZmZpY2lhbCBVcGRhdGUgMjAwOC0wMQ0KMCAhSElTVE9SWSAyMDE0LTExLTI5IFtTdGVmZmVuXSBSZW5hbWVkIGZyb20gNDA3Mw0KMCAhSElTVE9SWSAyMDE0LTEyLTI4IFtNYWdGb3JzXSBQcmltaXRpdmUgc3Vic3RpdHV0aW9uDQowICFISVNUT1JZIDIwMTUtMTAtMTEgW1BUYWRtaW5dIE9mZmljaWFsIFVwZGF0ZSAyMDE1LTAxDQoNCjEgMTYgMCAzIDAgLTEgMCAwIDAgLTEuMjUgMCAwIDAgMSBzdHVkNC5kYXQNCjEgMTYgMCAzIDAgLTYgMCAwIDAgLTEgMCAwIDAgNiA0LTRkaXNjLmRhdA0KMSAxNiAwIDMgMCAtMiAwIDAgMCAtMSAwIDAgMCAyIDQtNHJpbmc0LmRhdA0KMSAxNiAwIDAgMCAxMCAwIDAgMCAzIDAgMCAwIDEwIDQtNGN5bG8uZGF0DQoxIDE2IDAgMCAwIDIgMCAwIDAgMSAwIDAgMCAyIDQtNHJpbmc0LmRhdA0KMSAxNiAwIDAgMCAyIDAgMCAwIDEgMCAwIDAgMiA0LTRyaW5nMy5kYXQNCjEgMTYgMCAwIDAgMSAwIDAgMCAxIDAgMCAwIDEgc3R1ZC5kYXQNCg==';
 
       if (scene) {
         scene = null;
@@ -197,7 +214,7 @@ reader.onloadend = onFileLoad;
 function handleSubmit()
 {
     if (document.getElementById('file-upload-input').files[0]) {
-  	  clearWarning();
+      clearWarning();
       $("#fileform").transition('hide');
       $("#buttonBar").transition('show');
       $("#webgl").api("set loading")
