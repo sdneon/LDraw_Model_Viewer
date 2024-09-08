@@ -490,6 +490,32 @@ function spawnServer()
         });
     }
 
+    app.post('/ldr_query', (req, res) => {
+        console.log('/ldr_query'.bold.debug);
+        queryParts(res, JSON.parse(req.body.parts)[0]);
+    });
+
+    //LasseD/buildinginstructions.js content:
+    app.use('/', express.static('public_bi'));
+
+    //Next 2 GETs handle reqs from LasseD/buildinginstructions.js,
+    // and must come before the *.dat
+    // to change the 'input format' of simple part name (e.g. '3040.dat' to a faux .LDR line) to reuse queryParts() call
+    const PREFIX = '1 16 0 0 0 1 0 0 0 1 0 0 0 1 ';
+    let p = '/ldraw_parts/';
+    app.get(`${p}*`, (req, res) => {
+        const part = req.url.substring(req.url.indexOf(p) + p.length);
+        queryParts(res, PREFIX + part);
+    });
+
+    let p2 = '/ldraw_unofficial/';
+    app.get(`${p2}*`, (req, res) => {
+        const part = req.url.substring(req.url.indexOf(p2) + p2.length);
+        queryParts(res, PREFIX + part);
+    });
+
+    //This handles reqs from LDraw Model Viewer.
+    //  Input format: raw LDR content
     app.get('/*.dat', (req, res) => {
         console.log('Get part:'.bold.debug, req.url);
         queryParts(res, [req.url.substring(1)]);
