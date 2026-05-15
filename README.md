@@ -180,3 +180,13 @@ There are some Lego models which fail to load when some parts are "delay-loaded"
 Thanks to everyone who made virtual Lego builds possible!
 
 Do also check out my [LeoCAD mod](https://github.com/sdneon/leocad/) with better parts search et al, and a [fun blog](https://yunharla.wixsite.com/legommm).
+
+## WordPress snippet for `plus_lesson`
+Added example snippet: `wordpress/plus-lesson-ldr-viewer-snippet.php`.
+
+What it does:
+- Adds shortcode `[plus_lesson_ldr_viewer]` for CPT `plus_lesson`
+- Reads model URL from `_plus_ldr_file` meta
+- Loads `.ldr` model from URL and renders viewer widget
+- Supports model rotate/zoom/pan (via LDraw viewer controls)
+- Supports step-by-step navigation by `0 STEP` markers
